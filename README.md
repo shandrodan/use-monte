@@ -1,8 +1,10 @@
 # use-monte
 
+![Monte: a runs table with one azure Run now button, 55 components, the install command, screens moving from a legacy look to Monte, and the rules your agent follows](.github/preview.gif)
+
 An agent skill that puts the Monte design system into a React + Tailwind v4 app and moves every screen onto it.
 
-Monte is compact and ruled: mono capitals, 1px rules, square controls and one azure action colour. The skill carries the whole system (tokens, about 50 components, hooks and a lint config) and the skills that run the migration.
+Monte is compact and ruled: mono capitals, 1px rules, square controls and one azure action colour. The skill carries the whole system (tokens, 55 components, hooks and a lint config) and the guides that run the migration.
 
 ## Install
 
