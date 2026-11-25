@@ -1,0 +1,340 @@
+/* Monte's skin for ui-sdk (@ui-sdk/react). ui-sdk renders no styles of its own; its parts carry data-slot names and
+   state attributes (data-highlighted, data-selected, data-expanded, data-pressed, data-open ...). This file draws those
+   slots in Monte's tokens and recipes, so a ui-sdk part placed inside .monte reads as Monte with no class on it.
+
+   Why not @ui-sdk/core/web.css: it styles bare [data-slot] names and every <a> on the page, sets color-scheme on :root
+   and draws ui-sdk's own corners, shadows and icons. About 75 of its slot names (button, field, select-trigger,
+   tabs-list, tooltip-content ...) are also the slot names Monte's Base UI components carry, so it restyles them. The
+   app does not load it.
+
+   Scope: only the slots of components Monte does not already ship (tree, toolbar, toggle, menubar and its menus,
+   listbox, number input, resizable, separator). Slots that share a name with a Monte component (dialog-*, select-*,
+   field-*, tabs-* ...) are left alone on purpose: use the Monte component for those.
+
+   Every selector sits in :where(), so it has no specificity: a utility class on the part (the wrappers in
+   components/monte/ui add their variants that way) wins over it. Focus rules that must beat base.css's ring are the
+   exception and say so. */
+
+/* ui-sdk hides closed parts with [hidden], and a closed popup is a popover that is not open, both from its own low
+   layer; a display set here or by a utility would show them again, so these two keep their specificity. */
+.monte [data-slot][hidden]:not([hidden="until-found"]) { display: none; }
+.monte [data-slot][popover]:not(:popover-open) { display: none; }
+
+/* ── Shared row geometry, the same variables Monte's list popups use (lib/monte/overlay.ts) ── */
+:where(.monte :where([data-slot="menu-content"], [data-slot="listbox"])) {
+  --menu-item-h: var(--row-sm);
+  --menu-px: var(--field-inset);
+  --menu-glyph: calc((var(--menu-item-h) - var(--icon)) / 2);
+  --menu-col: calc(var(--menu-glyph) + var(--icon) + var(--space-2));
+}
+:where(.monte :where([data-slot="menu-content"], [data-slot="listbox"])[data-size="sm"]) {
+  --menu-item-h: var(--control-sm);
+  --menu-px: var(--field-inset-sm);
+}
+
+/* ── Tree ── */
+:where(.monte :where([data-slot="tree"])) {
+  --tree-row: var(--row-sm);
+  --tree-indent: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font: var(--type-body-sm);
+  color: var(--text-1);
+}
+:where(.monte :where([data-slot="tree"])[data-size="sm"]) { --tree-row: var(--control-sm); font: var(--type-caption); }
+:where(.monte :where([data-slot="tree-item"])) { display: flex; flex-direction: column; min-width: 0; outline: none; }
+/* The ring belongs on the row, not around the item and its children: two classes and a pseudo-class beat base.css. */
+.monte [data-slot="tree-item"]:focus-visible { outline: none; }
+.monte [data-slot="tree-item"]:focus-visible > [data-slot="tree-label"] { @apply focus-ring-inset; }
+:where(.monte :where([data-slot="tree-label"])) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  min-width: 0;
+  min-height: var(--tree-row);
+  padding-inline-start: calc((var(--tree-level, 1) - 1) * var(--tree-indent) + var(--space-1));
+  padding-inline-end: var(--inset);
+  color: var(--text-1);
+  cursor: default;
+  user-select: none;
+  transition: background-color var(--dur-state) var(--ease-soft), color var(--dur-state) var(--ease-soft);
+}
+:where(.monte :where([data-slot="tree-label"]) :where(svg)) { width: var(--icon); height: var(--icon); flex-shrink: 0; color: var(--text-3); }
+@media (hover: hover) {
+  :where(.monte :where([data-slot="tree-label"]:hover:not([data-disabled]))) { background-color: var(--hover); }
+}
+:where(.monte :where([data-slot="tree-label"]):where([data-selected], [data-current])) { @apply selected; }
+@media (hover: hover) {
+  :where(.monte :where([data-slot="tree-label"]:hover):where([data-selected], [data-current]):not([data-disabled])) { background-color: var(--selected-strong); }
+}
+:where(.monte :where([data-slot="tree-label"])[data-current]) { color: var(--accent-text); }
+:where(.monte :where([data-slot="tree-label"])[data-disabled]) { color: var(--text-disabled); cursor: not-allowed; }
+:where(.monte :where([data-slot="tree-label"])[data-failed]) { color: var(--fail-text); }
+:where(.monte :where([data-slot="tree-indicator"])) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon);
+  height: var(--icon);
+  flex-shrink: 0;
+  color: var(--text-3);
+  transition: rotate var(--dur-state) var(--ease-out);
+}
+:where(.monte :where([data-slot="tree-indicator"]):not([data-branch])) { visibility: hidden; }
+:where(.monte :where([data-slot="tree-indicator"])[data-expanded]) { rotate: 90deg; }
+:where(.monte :where([data-slot="tree-indicator"]):dir(rtl)) { scale: -1 1; }
+:where(.monte :where([data-slot="tree-indicator"])[data-expanded]:dir(rtl)) { rotate: -90deg; }
+:where(.monte :where([data-slot="tree-indicator"])[data-loading]) { color: var(--text-disabled); }
+:where(.monte :where([data-slot="tree-checkbox"])) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon);
+  height: var(--icon);
+  flex-shrink: 0;
+  background-color: var(--check-off);
+  border: var(--line-width) solid var(--line-control);
+  color: transparent;
+}
+:where(.monte :where([data-slot="tree-checkbox"]):where([data-checked], [data-indeterminate])) { @apply checked; }
+
+/* ── Toolbar and toggle ── */
+:where(.monte :where([data-slot="toolbar"])) {
+  --tool-h: var(--control-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+:where(.monte :where([data-slot="toolbar"])[data-size="default"]) { --tool-h: var(--control); }
+:where(.monte :where([data-slot="toolbar"])[data-orientation="vertical"]) { flex-direction: column; align-items: stretch; }
+:where(.monte :where([data-slot="toolbar-group"], [data-slot="toggle-group"])) { display: inline-flex; align-items: center; gap: var(--space-1); }
+:where(.monte :where([data-slot="toolbar-group"], [data-slot="toggle-group"])[data-orientation="vertical"]) { flex-direction: column; align-items: stretch; }
+:where(.monte :where([data-slot="toolbar-button"], [data-slot="toolbar-link"], [data-slot="toggle"])) {
+  @apply quiet;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5);
+  height: var(--tool-h, var(--control));
+  min-width: var(--tool-h, var(--control));
+  padding-inline: var(--space-2);
+  flex-shrink: 0;
+  white-space: nowrap;
+  user-select: none;
+  font: var(--type-label-sm);
+  letter-spacing: var(--tracking-label-sm);
+  text-transform: uppercase;
+}
+:where(.monte :where([data-slot="toolbar-button"], [data-slot="toolbar-link"], [data-slot="toggle"]) :where(svg)) { width: var(--icon); height: var(--icon); flex-shrink: 0; pointer-events: none; }
+/* An icon-only tool is a square. */
+:where(.monte :where([data-slot="toolbar-button"], [data-slot="toggle"]):where([aria-label]):not(:has(> :not(svg, [data-slot="toggle-icon"])))) { padding-inline: 0; }
+:where(.monte :where([data-slot="toolbar-button"], [data-slot="toolbar-link"], [data-slot="toggle"]):where([data-disabled], [aria-disabled="true"])) { cursor: not-allowed; }
+:where(.monte :where([data-slot="toggle"])[data-pressed]) { @apply checked light-motion; }
+:where(.monte :where([data-slot="toggle-icon"])) { display: inline-flex; }
+:where(.monte :where([data-slot="toggle-icon"])[data-mirror]:dir(rtl)) { scale: -1 1; }
+:where(.monte :where([data-slot="toolbar-input"])) { @apply field; --field-h: var(--tool-h); --field-px: var(--field-inset-sm); --field-size: var(--tool-h); }
+:where(.monte :where([data-slot="toolbar-separator"], [data-slot="separator"])) { flex-shrink: 0; background-color: var(--line); }
+:where(.monte :where([data-slot="toolbar-separator"], [data-slot="separator"]):where([data-orientation="vertical"])) { width: var(--line-width); align-self: stretch; margin-inline: var(--space-1); }
+:where(.monte :where([data-slot="toolbar-separator"], [data-slot="separator"]):where([data-orientation="horizontal"])) { height: var(--line-width); align-self: stretch; }
+:where(.monte :where([data-slot="separator"]):where([data-orientation="vertical"])) { margin-inline: 0; }
+
+/* ── Menubar and its menus ── */
+:where(.monte :where([data-slot="menubar"])) { display: flex; align-items: stretch; min-width: 0; }
+:where(.monte :where([data-slot="menubar"])[data-orientation="vertical"]) { flex-direction: column; }
+/* A menu trigger on its own is the secondary; in a menubar it is a quiet tab of the bar; inside a menu it is a row (below). */
+:where(.monte :where([data-slot="menu-trigger"])) {
+  @apply edged;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  height: var(--control);
+  padding-inline: var(--space-3);
+  font: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  white-space: nowrap;
+  user-select: none;
+}
+:where(.monte :where([data-slot="menubar"] > [data-slot="menu-trigger"])) { @apply quiet; }
+:where(.monte :where([data-slot="menubar"] > [data-slot="menu-trigger"])[data-open]) { background-color: var(--pressed); color: var(--text-1); }
+:where(.monte :where([data-slot="menu-trigger"]) :where(svg)) { width: var(--icon); height: var(--icon); flex-shrink: 0; }
+:where(.monte :where([data-slot="menu-content"])) {
+  @apply overlay overlay-motion;
+  display: flex;
+  flex-direction: column;
+  min-width: max(var(--menu-min), var(--anchor-width, 0px));
+  max-width: var(--available-width, none);
+  max-height: min(var(--popup-max), var(--available-height, var(--popup-max)));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+:where(.monte :where([data-slot="menu-item"], [data-slot="menu-checkbox-item"], [data-slot="menu-radio-item"], [data-slot="menu-content"] [data-slot="menu-trigger"])) {
+  @apply menu-row;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  height: auto;
+  min-height: var(--menu-item-h);
+  padding-inline: var(--menu-px);
+  color: var(--text-1);
+  background-color: transparent;
+  background-image: none;
+  border: 0;
+  box-shadow: none;
+  cursor: default;
+  outline: none;
+  user-select: none;
+  font: var(--type-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+:where(.monte :where([data-slot="menu-content"])[data-size="sm"] :where([data-slot="menu-item"], [data-slot="menu-checkbox-item"], [data-slot="menu-radio-item"], [data-slot="menu-trigger"])) { font: var(--type-label-sm); letter-spacing: var(--tracking-label-sm); }
+:where(.monte :where([data-slot="menu-item"], [data-slot="menu-checkbox-item"], [data-slot="menu-radio-item"], [data-slot="menu-content"] [data-slot="menu-trigger"]) :where(svg)) { width: var(--icon); height: var(--icon); flex-shrink: 0; color: var(--text-3); }
+:where(.monte :where([data-slot="menu-content"] [data-slot="menu-trigger"]) :where(svg:last-child)) { margin-inline-start: auto; margin-inline-end: calc(var(--menu-glyph) - var(--menu-px)); }
+:where(.monte :where([data-slot="menu-content"] [data-slot="menu-trigger"])[data-open]) { background-color: var(--row-highlight); }
+:where(.monte :where([data-slot="menu-content"])[data-has-icons] :where([data-slot="menu-item"]:not([data-has-icon]))) { padding-inline-start: var(--menu-col); }
+:where(.monte :where([data-slot="menu-checkbox-item"], [data-slot="menu-radio-item"])) { padding-inline-start: var(--menu-col); }
+:where(.monte :where([data-slot="menu-item"], [data-slot="menu-checkbox-item"], [data-slot="menu-radio-item"], [data-slot="menu-trigger"]):where([data-disabled])) { color: var(--text-disabled); cursor: not-allowed; }
+:where(.monte :where([data-slot="menu-item"])[data-destructive]) { color: var(--fail-text); }
+:where(.monte :where([data-slot="menu-item"])[data-destructive] :where(svg)) { color: var(--fail-text); }
+:where(.monte :where([data-slot="menu-item"])[data-destructive][data-highlighted]) { background-color: var(--fail-tint); }
+:where(.monte :where([data-slot="menu-item-indicator"])) {
+  position: absolute;
+  inset-inline-start: var(--menu-glyph);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon);
+  height: var(--icon);
+  pointer-events: none;
+}
+:where(.monte :where([data-slot="menu-item-indicator"]) :where(svg)) { color: var(--text-1); }
+:where(.monte :where([data-slot="menu-item-icon"])) { display: inline-flex; margin-inline-start: calc(var(--menu-glyph) - var(--menu-px)); }
+:where(.monte :where([data-slot="menu-item-icon"])[data-mirror]:dir(rtl)) { scale: -1 1; }
+:where(.monte :where([data-slot="menu-group-label"], [data-slot="listbox-group-label"])) {
+  display: flex;
+  align-items: center;
+  min-height: var(--row-sm);
+  padding-inline: var(--menu-px);
+  font: var(--type-label-sm);
+  letter-spacing: var(--tracking-label-sm);
+  text-transform: uppercase;
+  color: var(--text-2);
+  user-select: none;
+}
+:where(.monte :where([data-slot="menu-separator"], [data-slot="listbox-separator"])) { height: var(--line-width); flex-shrink: 0; background-color: var(--line); }
+:where(.monte :where([data-slot="menu-shortcut"])) {
+  margin-inline-start: auto;
+  padding-inline-start: var(--space-4);
+  font: var(--type-code-sm);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-3);
+}
+
+/* ── Listbox: an always-visible list on the panel, its rows in the list popups' light ── */
+:where(.monte :where([data-slot="listbox"])) {
+  @apply overlay;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  outline-offset: var(--focus-offset);
+}
+:where(.monte :where([data-slot="listbox"])[data-orientation="horizontal"]) { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+:where(.monte :where([data-slot="listbox-item"])) {
+  @apply menu-row;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--menu-item-h);
+  padding-inline: var(--menu-px) var(--menu-col);
+  font: var(--type-body-sm);
+  color: var(--text-1);
+  cursor: default;
+  outline: none;
+  user-select: none;
+}
+:where(.monte :where([data-slot="listbox"])[data-size="sm"] :where([data-slot="listbox-item"])) { font: var(--type-caption); }
+:where(.monte :where([data-slot="listbox-item"]) :where(svg)) { width: var(--icon); height: var(--icon); flex-shrink: 0; color: var(--text-3); }
+/* The listbox's selection persists on the page, so it takes the wash a selected table row takes, and the tick. */
+:where(.monte :where([data-slot="listbox-item"])[data-selected]) { background-color: var(--selected); }
+:where(.monte :where([data-slot="listbox-item"])[data-selected][data-highlighted]) { background-color: var(--selected-strong); }
+:where(.monte :where([data-slot="listbox-item"])[data-disabled]) { color: var(--text-disabled); cursor: not-allowed; }
+:where(.monte :where([data-slot="listbox"])[data-readonly] :where([data-slot="listbox-item"])) { cursor: default; }
+:where(.monte :where([data-slot="listbox-item-indicator"])) {
+  position: absolute;
+  inset-inline-end: var(--menu-glyph);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon);
+  height: var(--icon);
+  pointer-events: none;
+}
+:where(.monte :where([data-slot="listbox-item-indicator"]) :where(svg)) { color: var(--text-1); }
+:where(.monte :where([data-slot="listbox-item-icon"])) { display: inline-flex; }
+:where(.monte :where([data-slot="listbox-item-icon"])[data-mirror]:dir(rtl)) { scale: -1 1; }
+
+/* ── Number input: the field box, the value, and two square step cells divided by rules ── */
+:where(.monte :where([data-slot="number-input"])) { display: flex; flex-direction: column; gap: var(--space-1-5); min-width: 0; font: var(--type-body-sm); letter-spacing: var(--tracking-body); }
+:where(.monte :where([data-slot="number-input-group"])) {
+  @apply field;
+  gap: 0;
+  padding-inline: 0;
+  align-items: stretch;
+  font: inherit;
+  letter-spacing: inherit;
+}
+:where(.monte :where([data-slot="number-input-group"]):has([aria-invalid="true"], [data-invalid])) { border-color: var(--fail); box-shadow: 0 0 0 var(--line-width) var(--field-ring-fail); }
+:where(.monte :where([data-slot="number-input-group"]) > :where(* + *)) { border-inline-start: var(--line-width) solid var(--line); }
+:where(.monte :where([data-slot="number-input-control"])) {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-inline: var(--field-px, var(--field-inset));
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+.monte [data-slot="number-input-control"]:focus-visible { outline: none; }
+:where(.monte :where([data-slot="number-input-increment"], [data-slot="number-input-decrement"])) {
+  @apply quiet;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: calc(var(--field-h, var(--control)) - var(--line-width) * 2);
+  border-block: 0;
+  border-inline-end: 0;
+  border-inline-start-color: var(--line);
+  user-select: none;
+}
+:where(.monte :where([data-slot="number-input-increment"], [data-slot="number-input-decrement"]) :where(svg)) { width: var(--field-icon, var(--icon)); height: var(--field-icon, var(--icon)); }
+:where(.monte :where([data-slot="number-input-increment"], [data-slot="number-input-decrement"])[data-disabled]) { color: var(--text-disabled); cursor: not-allowed; background-color: transparent; }
+
+/* ── Resizable: panels divided by one rule that a pointer can take hold of ── */
+:where(.monte :where([data-slot="resizable"])) { min-width: 0; min-height: 0; }
+:where(.monte :where([data-slot="resizable-panel"])) { min-width: 0; min-height: 0; overflow: auto; }
+:where(.monte :where([data-slot="resizable-handle"])) {
+  position: relative;
+  flex: 0 0 var(--line-width);
+  background-color: var(--line);
+  transition: background-color var(--dur-state) var(--ease-out);
+}
+/* The rule is 1px; its hit area reaches 4px either side. */
+.monte :where([data-slot="resizable-handle"])::after { content: ""; position: absolute; inset: 0 calc(var(--space-1) * -1); }
+.monte :where([data-slot="resizable-handle"])[data-orientation="vertical"]::after { inset: calc(var(--space-1) * -1) 0; }
+:where(.monte :where([data-slot="resizable-handle"]):where([data-hovering], [data-dragging]):not([data-disabled])) { background-color: var(--line-control); }
+.monte [data-slot="resizable-handle"]:focus-visible { outline-offset: 0; }

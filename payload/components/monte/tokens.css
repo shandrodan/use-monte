@@ -1,0 +1,388 @@
+/* Monte tokens. The one file to retune.
+
+   Monte is compact and ruled, for infrastructure and data tools: pipelines, jobs, logs, compute and warehouses.
+   Its interface speaks in mono capitals, its headlines and prose in a quiet display sans, and one blue
+   marks the thing to act on.
+
+   Rules
+   - Every colour is computed in oklch from the seeds at the top of the block (--brand-h, --brand-c, --neutral-h,
+     --neutral-c and the three status hues). Change a seed, never a role: the roles point at ramp steps, and the
+     ramps hold one hue with lightness in even steps, so contrast stays where it is when the hue moves.
+   - Azure is the brand. In light it is the solid slab of the primary button under white text, the fill of a checked
+     control, the focus ring and a pale selection wash. In dark it is a tint with an azure line and light azure text.
+   - A reference colour may move in lightness, never in hue, by the least that clears its contrast target: Azure from
+     L 0.613 to 0.568 for white text (4.6:1), Sandy Brown's mark from 0.779 to 0.679 for 3:1. Each step says so.
+   - Warning is orange and failure a cold red, each always with its word.
+   - Every reading text role is 4.5:1 or more on every surface it sits on, --text-3 included, and --line-control,
+     the edge of the small marks (checkbox, radio, switch, meter track), is 3:1 or more (WCAG 1.4.11).
+     foundations/contrast-check.mjs holds the pairs and contrast.test.mjs fails the build when one drops.
+   - Fields, menus, dialogs, segmented controls and secondary buttons take --line, the rule a card draws, 1.3:1 on
+     the page. Their edge is not what identifies them: a field reads by its label, its placeholder and its fill, a
+     button by its label.
+   - Zero radius everywhere. --radius is the only corner token, and it is 0.
+   - No shadows. An overlay is the panel with a 1px --line edge over the content; a dialog adds the scrim. The primary
+     and secondary buttons are lit from below instead (--primary-light, --secondary-light): the light rises under the
+     pointer and goes out when it is held. The secondary's body lightens under the pointer; the azure slab's darkens a
+     step, so its white label keeps 4.5:1. Under the pointer and held they also take a 1px ring
+     flush outside the edge (--primary-ring, --secondary-ring): a hairline, no blur, no offset, never a shadow.
+   - Structure is rules, not a cell grid: 1px lines divide content (rows, columns, panel edges). There is no grid
+     pattern behind the page. Dots fill a large empty gutter, sparingly, as decoration only.
+   - Hierarchy is size, case and colour, never weight. Both faces are set at Regular (400).
+   - Mono capitals come only through the label roles (type-label and its sizes), which carry the case and the
+     tracking together. Mono inside a sentence of sans is set at --mono-scale of the text around it.
+
+   Format, read by the docs
+   - One declaration per line: --name: value; followed by a comment of the form job | used by.
+   - A line that starts with == opens a token group. Keep both formats when you retune.
+
+   Scope: the tokens live on .monte and [data-system="monte"], not :root, so an app's own --space-* and --font-*
+   stay as they are.
+
+   Fonts: Geist and Geist Mono, both SIL OFL 1.1, loaded by next/font in app/layout.tsx, which sets
+   --font-geist-sans and --font-geist-mono on <html>. Without them the stacks fall back to the platform sans and monospace. */
+
+
+[data-system="monte"], .monte {
+  /* == Seeds: the only numbers to change. Every colour below is computed from them in oklch == */
+  --brand-h: 256.3; /* the brand hue: Azure Blue #007FFF is oklch(0.613 0.212 256.3) | brand ramp, accent, primary, focus, selection, data */
+  --brand-c: 0.196; /* Azure's chroma at --brand-500's lightness, the most sRGB holds there; the other steps take the share that fits at theirs | brand ramp */
+  --neutral-h: var(--brand-h); /* the hue the greys lean toward: the brand's, so white, ink and rules all read cool | neutral ramp */
+  --neutral-c: 0.01; /* how far the greys lean: 0 is pure grey, 0.02 is plainly tinted | neutral ramp */
+  --ok-h: 135.1; /* done: Forest Green #548C2F, oklch(0.581 0.139 135.1) | ok, ok-text, ok-tint */
+  --ok-c: 0.139; /* Forest Green's chroma | ok roles */
+  --warn-h: 62.5; /* warning: Sandy Brown #FA9F42, oklch(0.779 0.15 62.5) | warn, warn-text, warn-tint */
+  --warn-c: 0.15; /* Sandy Brown's chroma | warn roles */
+  --fail-h: 24.6; /* failure: Brick Red #BB0A21, oklch(0.502 0.199 24.6) | fail, fail-text, fail-tint */
+  --fail-c: 0.199; /* Brick Red's chroma | fail roles */
+
+  /* == Brand ramp: one hue, lightness in even steps, chroma a share of --brand-c == */
+  --brand-50: oklch(0.97 calc(var(--brand-c) * 0.07) var(--brand-h)); /* the faintest wash | selection */
+  --brand-100: oklch(0.93 calc(var(--brand-c) * 0.16) var(--brand-h)); /* a wash under ink | selection under the pointer, focus halo */
+  --brand-200: oklch(0.87 calc(var(--brand-c) * 0.32) var(--brand-h)); /* a pale fill | data */
+  --brand-300: oklch(0.79 calc(var(--brand-c) * 0.53) var(--brand-h)); /* a light line or, in dark, text | data, dark text */
+  --brand-400: oklch(0.68 calc(var(--brand-c) * 0.84) var(--brand-h)); /* a mid line | dark accent text, dark focus */
+  --brand-500: oklch(0.568 var(--brand-c) var(--brand-h)); /* Azure Blue, darkened from L 0.613 to 0.568: the least that lets white text on it clear 4.5:1 (4.6:1) | accent, primary, focus, check, data-1, field focus edge */
+  --brand-600: oklch(0.5 calc(var(--brand-c) * 0.87) var(--brand-h)); /* Azure a step darker | primary hover and edge, check edge */
+  --brand-700: oklch(0.44 calc(var(--brand-c) * 0.77) var(--brand-h)); /* brand text and edges on white | accent text, primary edge */
+  --brand-800: oklch(0.37 calc(var(--brand-c) * 0.66) var(--brand-h)); /* deep | data */
+  --brand-900: oklch(0.3 calc(var(--brand-c) * 0.56) var(--brand-h)); /* deeper | data */
+  --brand-950: oklch(0.23 calc(var(--brand-c) * 0.49) var(--brand-h)); /* nearly ink | dark tints */
+
+  /* == Neutral ramp: one cool hue, lightness only == */
+  --neutral-0: oklch(1 0 0); /* system white, no tint | page, inverse text */
+  --neutral-25: oklch(0.98 var(--neutral-c) var(--neutral-h)); /* a hair under white | panel, secondary body, field body */
+  --neutral-50: oklch(0.965 var(--neutral-c) var(--neutral-h)); /* an inset | well, rings */
+  --neutral-100: oklch(0.945 var(--neutral-c) var(--neutral-h)); /* a faint rule | row rules, hover edges */
+  --neutral-200: oklch(0.9 var(--neutral-c) var(--neutral-h)); /* the rule | line, dots */
+  --neutral-300: oklch(0.8 var(--neutral-c) var(--neutral-h)); /* | dark text-2 */
+  --neutral-400: oklch(0.71 var(--neutral-c) var(--neutral-h)); /* | disabled text, data baseline */
+  --neutral-500: oklch(0.6 var(--neutral-c) var(--neutral-h)); /* the edge of a small mark, 3:1 | line-control, mark */
+  --neutral-600: oklch(0.51 var(--neutral-c) var(--neutral-h)); /* tertiary text, 4.5:1 on white | text-3 */
+  --neutral-700: oklch(0.44 var(--neutral-c) var(--neutral-h)); /* secondary text | text-2 */
+  --neutral-800: oklch(0.32 var(--neutral-c) var(--neutral-h)); /* | dark raised rules */
+  --neutral-850: oklch(0.28 var(--neutral-c) var(--neutral-h)); /* | dark line */
+  --neutral-900: oklch(0.245 var(--neutral-c) var(--neutral-h)); /* | dark well */
+  --neutral-925: oklch(0.215 var(--neutral-c) var(--neutral-h)); /* | dark panel */
+  --neutral-950: oklch(0.19 var(--neutral-c) var(--neutral-h)); /* ink | text-1, dark page */
+
+  /* == Surfaces == */
+  --page: var(--neutral-0); /* the page: system white | app background, docs preview */
+  --panel: var(--neutral-25); /* a raised region, a hair cooler than the page | panel, overlay, header row */
+  --well: var(--neutral-50); /* an inset: code, output, a track | code block, log viewer, meter track, disabled control */
+  --code-surface: var(--well); /* where a block of code sits | code block, log viewer, code window */
+  --hover: oklch(0.19 var(--neutral-c) var(--neutral-h) / 0.04); /* ink at 4% | row, ghost button, menu item */
+  --pressed: oklch(0.19 var(--neutral-c) var(--neutral-h) / 0.08); /* ink at 8% | ghost button, destructive button, segmented control, row active */
+  --selected: var(--brand-50); /* the selection wash, under ink | selected row, current tab index, highlighted line */
+  --selected-strong: var(--brand-100); /* the selection wash under the pointer or held | selected row hover */
+  --scrim: oklch(0.19 var(--neutral-c) var(--neutral-h) / 0.32); /* the dim behind a dialog: ink at 32% | dialog, sheet */
+
+  /* == Text == */
+  --text-1: var(--neutral-950); /* primary text, cool near-black | headlines, body, labels, values */
+  --text-2: var(--neutral-700); /* secondary text | descriptions, hints, meta */
+  --text-3: var(--neutral-600); /* tertiary text, still 4.5:1 | axis labels, placeholders, column heads at rest */
+  --text-disabled: var(--neutral-400); /* a disabled label; no contrast claim | disabled control */
+  --text-inverse: var(--neutral-0); /* text on solid ink or brand | tooltip, checked mark, primary button */
+
+  /* == Lines == */
+  --line-faint: var(--neutral-100); /* the rule between rows inside a region | table row, list row, log line */
+  --line: var(--neutral-200); /* the rule that divides content and the edge of a field or overlay | panel, frame, input, menu, dialog */
+  --line-control: var(--neutral-500); /* the edge of a small mark, 3:1 | checkbox, radio, switch, meter track, chart cursor */
+  --mark: var(--neutral-500); /* the rail's dots and a tool-call stack's dashed connectors | rail, tool-call row */
+  --dot: var(--neutral-200); /* the dots of a dot-matrix gutter, decoration only | dots */
+
+  /* == Accent: the brand blue. Solid blue passes as text on white, so text, edges and the slab share the hue == */
+  --accent: var(--brand-500); /* Azure Blue: the accent, a data series | primary button, chart */
+  --accent-text: var(--brand-700); /* brand text on a light ground | current tab index, link */
+  --accent-edge: var(--brand-500); /* the line around a wash | running step tab, selected tab index */
+
+  /* == Primary: the one action a group leads with == */
+  --primary-bg: var(--brand-500); /* the solid azure slab, 4.6:1 under white text | primary button */
+  --primary-text: var(--neutral-0); /* white on the slab | primary button */
+  --primary-edge: var(--brand-600); /* the slab's 1px edge | primary button */
+  --primary-hover: var(--brand-600); /* the slab under the pointer: a step darker, since a lighter azure would drop white text under 4.5:1 | primary button hover */
+  --primary-edge-hover: var(--brand-700); /* the edge under the pointer, darker with the fill | primary button hover */
+  --primary-pressed: var(--brand-500); /* the slab held: back to rest | primary button active */
+  --primary-light: oklch(1 0 0 / 0.22); /* the light under the slab at rest | primary button */
+  --primary-light-hover: oklch(1 0 0 / 0.36); /* that light under the pointer | primary button hover */
+  --primary-ring: var(--brand-100); /* the hairline halo outside the slab under the pointer | primary button hover */
+
+  /* == Secondary: the edged button, a body a hair off white so hover can brighten it == */
+  --secondary-bg: var(--neutral-25); /* the secondary's body at rest | secondary button */
+  --secondary-hover: var(--neutral-0); /* the body under the pointer, lifted to white | secondary button hover */
+  --secondary-pressed: var(--neutral-25); /* the body held: back to rest | secondary button active */
+  --secondary-edge: var(--line); /* its 1px edge at rest and held | secondary button */
+  --secondary-edge-hover: var(--neutral-100); /* the edge under the pointer | secondary button hover */
+  --secondary-light: oklch(1 0 0 / 0.95); /* the light under the body at rest | secondary button */
+  --secondary-light-hover: oklch(1 0 0 / 1); /* that light under the pointer | secondary button hover */
+  --secondary-ring: var(--neutral-50); /* the hairline halo under the pointer | secondary button hover */
+
+  /* == Checked: a value chosen inside a small control: the brand solid with a white mark == */
+  --check-bg: var(--brand-500); /* the checked box, the chosen radio, the switch on | checkbox, radio, switch, segmented thumb, slider thumb */
+  --check-edge: var(--brand-600); /* its edge | checkbox, radio, switch, segmented thumb, slider thumb */
+  --check-mark: var(--neutral-0); /* the tick, dot or knob on it | checkbox, radio, switch */
+  --check-off: var(--secondary-bg); /* an empty box, radio or switch track | checkbox, radio, switch */
+  --check-off-hover: var(--neutral-0); /* that body under the pointer | checkbox, radio, switch */
+  --check-range: var(--accent-text); /* a slider's range | slider */
+
+  /* == Field: a field and a menu row in the button's light == */
+  --field-bg: var(--neutral-25); /* a field at rest | input, select, combobox, textarea, prompt input, filter cell */
+  --field-hover: var(--neutral-0); /* the body under the pointer | input, select, combobox, textarea, filter cell */
+  --field-edge: var(--line); /* its 1px edge at rest | input, select, combobox, textarea, filter cell */
+  --field-edge-hover: var(--neutral-100); /* the edge under the pointer | input, select, combobox, textarea, filter cell */
+  --field-ring-hover: var(--neutral-50); /* the hairline halo under the pointer | input, select, combobox, textarea, filter cell */
+  --field-focus-bg: var(--neutral-0); /* the body while it has the cursor | input, select, combobox, textarea, prompt input */
+  --field-focus-edge: var(--brand-500); /* the edge while it has the cursor | input, select, combobox, textarea, prompt input */
+  --field-ring-focus: var(--brand-100); /* the pale blue halo outside the focus edge | input, select, combobox, textarea, prompt input */
+  --field-ring-fail: oklch(0.92 0.035 var(--fail-h)); /* the pale red halo outside an invalid field | input, select, combobox, textarea, prompt input */
+
+  --field-inset-sm: 7px; /* the text inset of a 26px field, measured: the 13px sans's ink 8.5px in against its caps 8.3px from top and bottom; a glyph, key cap or chevron takes its own (26 - its height) / 2 | input sm, select sm, filter cell, menu row sm */
+  --field-inset: 10px; /* the text inset of a 32px field, measured: the first glyph's ink 11.5px in against the caps 11.3px from top and bottom | input, select, combobox, menu row, command row */
+  --field-inset-lg: 11px; /* the text inset of a 36px field, measured: the 15px sans's ink 12.5px in against its caps 12.6px from the top | input lg, select lg */
+  --row-highlight: var(--neutral-0); /* a menu row under the pointer, lifted to white | menu item, select option, combobox option, command item */
+  --row-highlight-edge: var(--line); /* the rules above and below the lifted row | menu item, select option, combobox option, command item */
+
+  /* == Status: Forest Green, Sandy Brown and Brick Red. The mark is the colour itself; the word takes the same hue darkened to 4.5:1 == */
+  --ok: oklch(0.581 var(--ok-c) var(--ok-h)); /* done: a mark | status mark, meter done */
+  --ok-text: oklch(0.49 calc(var(--ok-c) * 0.9) var(--ok-h)); /* the done word | status word, success message */
+  --ok-tint: oklch(0.955 calc(var(--ok-c) * 0.22) var(--ok-h)); /* the done ground | success tag, success row */
+  --warn: oklch(0.679 var(--warn-c) var(--warn-h)); /* a warning mark: Sandy Brown darkened from L 0.779 to 0.679, the least that reaches 3:1 on white | status mark, meter over budget */
+  --warn-text: oklch(0.53 calc(var(--warn-c) * 0.77) var(--warn-h)); /* the warning word | status word, warning message */
+  --warn-tint: oklch(0.96 calc(var(--warn-c) * 0.16) var(--warn-h)); /* the warning ground | warning tag, warning row */
+  --fail: oklch(0.502 var(--fail-c) var(--fail-h)); /* a failure mark, an invalid field's edge, a destructive action | status mark, invalid field, destructive button */
+  --fail-text: oklch(0.502 var(--fail-c) var(--fail-h)); /* the failure word | error message, status word, failed row */
+  --fail-tint: oklch(0.956 calc(var(--fail-c) * 0.1) var(--fail-h)); /* the failure ground | error tag, failed row, failing code line */
+
+  /* == Data: shades of the brand, a neutral baseline and ink == */
+  --data-1: var(--brand-500); /* the series that matters | chart, meter, swimlane */
+  --data-2: var(--brand-400); /* | chart, meter */
+  --data-3: var(--neutral-400); /* a baseline, a stem, the rest | chart stem, meter remainder */
+  --data-4: var(--brand-800); /* | chart */
+  --data-5: var(--neutral-700); /* | chart */
+  --data-6: var(--brand-200); /* | chart, swimlane lane */
+
+  /* == Focus == */
+  --focus: var(--brand-500); /* the focus ring: the brand | every focusable */
+  --caret: var(--text-1); /* the caret while text types | typed headline, typed label, command input */
+
+  /* == Elevation == */
+  --shadow-none: none; /* the only shadow Monte has: nothing casts one, overlays included; the buttons' 1px halo is a ring, not a shadow | every element */
+
+  /* == Type == */
+  --font-sans: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; /* headlines, prose and big numbers | title, heading, body, figure */
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace; /* the interface voice and code: labels, buttons, tabs, tags, axes, table heads, IDs | label roles, code roles */
+  --mono-scale: 0.85; /* mono inside a sentence of sans, at this share of the size around it: set by eye for Geist Mono beside Geist; re-measure if inline code reads large or small | mono, code in prose */
+  --weight-normal: 400; /* every word in both faces; hierarchy is size, case and colour | all text */
+  --type-display: 400 56px/1.02 var(--font-sans); /* a hero headline, on a cover or an introduction | display */
+  --type-title: 400 32px/1.1 var(--font-sans); /* the page title | page title */
+  --type-heading: 400 24px/1.2 var(--font-sans); /* a section or dialog title | section, dialog title */
+  --type-heading-sm: 400 18px/1.3 var(--font-sans); /* a subsection or panel title in sans | panel title, empty state title */
+  --type-figure: 400 40px/1 var(--font-sans); /* a big number with tabular figures | KPI value, meter readout */
+  --type-body: 400 15px/24px var(--font-sans); /* paragraphs | description, message, lead */
+  --type-body-sm: 400 14px/20px var(--font-sans); /* dense paragraphs, a field's text | field, card description, hint */
+  --type-caption: 400 13px/18px var(--font-sans); /* a sentence of meta under a row | row description, footnote */
+  --type-label-lg: 400 14px/20px var(--font-mono); /* a large control's label, in capitals | large button */
+  --type-label: 400 13px/16px var(--font-mono); /* the interface voice, in capitals: a control, a tab, a table head | button, tab, table head, status cell label */
+  --type-label-sm: 400 12px/16px var(--font-mono); /* a small control or a tag, in capitals | small button, tag, tab index */
+  --type-micro: 400 11px/14px var(--font-mono); /* an axis, a tick or a micro caption, in capitals | chart axis, meter scale, frame caption */
+  --type-code: 400 13px/20px var(--font-mono); /* code, logs and values read as written, not in capitals, and a region header's name | code block, log line, value in a row, panel header */
+  --type-code-sm: 400 12px/16px var(--font-mono); /* an ID or a value beside a label, as written | table ID, key tail, status value */
+  --tracking-display: -0.04em; /* the hero headline | display */
+  --tracking-title: -0.035em; /* titles | title, figure */
+  --tracking-heading: -0.025em; /* headings | heading, heading-sm */
+  --tracking-body: 0em; /* prose: the display cut sets tight on its own | body, body-sm, caption */
+  --tracking-label: 0.05em; /* mono capitals at 13px: opened so capitals do not crowd | label */
+  --tracking-label-lg: 0.04em; /* mono capitals at 14px | label-lg */
+  --tracking-label-sm: 0.06em; /* mono capitals at 12 and 11px, opened a step more as they shrink | label-sm, micro */
+
+  /* == Space == */
+  --space-0-5: 2px; /* an optical nudge | icon offset */
+  --space-1: 4px; /* the grid's step | tag, tab index box */
+  --space-1-5: 6px; /* icon to label inside a control | button, tag */
+  --space-2: 8px; /* between controls in a row, label to value, between a header's icon buttons | toolbar, footer actions, panel-head-actions */
+  --space-3: 12px; /* a button's text inset, between items inside a body, between table columns; a field and a menu row take --field-inset | button, frame body, table cell, log line */
+  --space-4: 16px; /* between groups inside a body, an overlay's inset | popover, field group */
+  --space-5: 20px; /* the narrowest dot gutter, between steps in a tool-call stack | dots, tool-call stack */
+  --space-6: 24px; /* between sections, a dialog's inset | section, dialog */
+  --space-8: 32px; /* between page regions | page */
+  --space-10: 40px; /* a page's top padding | page */
+  --inset: 12px; /* a region's one inset, from its edge to the nearest thing you see: header sides, body and footer on all four sides, a table's first and last cell, log and code lines, a tool-call row's header and body, a status-strip cell, a data list's sides | panel-head, frame body, frame footer, table, log viewer, code window, code block, tool-call row, tool-call body, status strip, data list, dialog, sheet */
+
+  /* == Size == */
+  --control-sm: 26px; /* a small control | button sm, tag button, toolbar action */
+  --control: 32px; /* the default control | button, input, select, tab */
+  --control-lg: 36px; /* a large control: a page's one main action, 2px clear of a row's rules each side | button lg, input lg, select lg */
+  --row: 40px; /* one row of a list, table or tool-call stack | table row, list row, tool-call row */
+  --row-sm: 32px; /* one row of a dense list or a menu, a table's column-head row | menu item, table head, dense table, small tool-call row */
+  --head: 38px; /* a region header's height, measured, not on the 4px grid: a 13px name's ink sits 12 to 14px from the top and 11 to 14px over the rule, against 12 to 14px from the side on the 12px inset | panel-head: frame header, table title, log viewer, code window, framed chart, dialog, sheet */
+  --icon: 16px; /* an icon in a control: the set is drawn at 16 | button, input, menu item */
+  --icon-sm: 14px; /* an icon inside a small field beside its 12 or 13px text, so the glyph spans the caps, not a line and a half | input sm, select sm, filter cell */
+  --marker: 8px; /* a small square mark: a status square, a chart head, a legend key | status, chart, meter */
+  --cap: 0.7em; /* the cap height of the text around it, Geist and Geist Mono alike | a status mark beside a value */
+  --rail: 12px; /* the width of a perforated rail at a quote's start | response quote */
+
+  /* == Radius == */
+  --radius: 0px; /* every corner: controls, panels, overlays, tags | everything */
+
+  /* == Lines == */
+  --line-width: 1px; /* every line: rules, edges, connectors | frame, field, rule, overlay */
+  --focus-width: 2px; /* the focus ring | every focusable */
+  --focus-offset: 2px; /* the gap between a control and its ring | every focusable */
+  --dot-pitch: 4px; /* the spacing of a dot-matrix gutter | dots */
+  --rail-pitch: 6px; /* the spacing of a rail's square dots | rail */
+  --rail-dot: 2px; /* one rail dot, square | rail */
+  --pending-cell: 3px; /* one square of the pending mark; four of them, 2px apart | button pending, switch pending, search pending */
+
+  /* == Motion: mechanical; cuts, typing and linear wipes, ease-out on moves, no springs == */
+  --dur-press: 80ms; /* a press: the colour step, no scale | button, row */
+  --dur-state: 120ms; /* a state change: hover, an edge, a check | every control */
+  --dur-overlay: 160ms; /* an overlay in; it leaves on --dur-state | menu, popover, dialog, tooltip */
+  --dur-wipe: 240ms; /* a region wiping in along its rule, start to end | panel reveal, meter fill, bar grow */
+  --dur-draw: 300ms; /* a connector drawing out, one hop | tool-call connector, swimlane elbow */
+  --dur-type: 18ms; /* one character typing in, about 55 a second | typed label, typed headline */
+  --dur-scramble: 400ms; /* a mono label resolving from random glyphs, start to end | panel header label, status value */
+  --dur-pending: 800ms; /* one cycle of the pending mark, four steps | button pending, tool call running */
+  --overlay-shift: 4px; /* how far an anchored overlay travels in from its trigger | menu, popover, select, tooltip */
+  --dur-light: 240ms; /* a button's fill and edge lightening under the pointer and settling back | primary button, secondary button */
+  --dur-glow: 320ms; /* a button's light from below rising and fading, a beat behind its fill | primary button, secondary button */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); /* the house curve: arrives fast and stops, no overshoot | every transition */
+  --ease-soft: cubic-bezier(0.22, 0.8, 0.24, 1); /* a softer arrival for light, no overshoot | primary button, secondary button hover */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1); /* an element leaving | overlay exit */
+  --ease-linear: linear; /* wipes, typing and the pending steps | wipe, draw, type */
+
+  /* == Layers == */
+  --z-raised: 10; /* a part lifted over its siblings inside a component | sticky header, focused cell */
+  --z-overlay: 50; /* every portalled layer, under the docs' own floating layers; the last opened sits on top | dialog, popover, menu, tooltip, toast */
+
+  /* == Layout == */
+  --overlay-sm: 400px; /* a small dialog | alert dialog */
+  --overlay: 480px; /* the default dialog and sheet width | dialog, sheet */
+  --overlay-lg: 640px; /* a wide dialog: a preview, the command palette | dialog lg, command */
+  --popover: 288px; /* a popover's width | popover */
+  --toast: 360px; /* a toast's width on a wide screen | toast */
+  --menu-min: 192px; /* the narrowest a menu opens | dropdown menu, select */
+  --popup-max: 320px; /* the tallest a list popup grows before it scrolls | select, combobox, menu */
+  --tooltip-max: 256px; /* a tooltip's line length before it wraps | tooltip */
+  --label-col: 160px; /* the widest a label column grows before its labels wrap | data list, key and value block */
+  --meter: 8px; /* the thickness of a meter or progress track | meter, progress */
+  --measure: 68ch; /* a paragraph's longest line | prose, lead */
+  --measure-hint: 60ch; /* a description or hint's longest line | field hint, row description */
+
+  /* == Scrollbar: one thin square bar for every scrolling region == */
+  --scrollbar-thumb: oklch(0.19 var(--neutral-c) var(--neutral-h) / 0.24); /* the thumb, ink at 24% | table, code block, log viewer, menu */
+  --scrollbar-size: 10px; /* the bar's gutter: a 6px thumb with --scrollbar-gap of clear on each side | every scrolling region */
+  --scrollbar-gap: 2px; /* the clear around the thumb | every scrolling region */
+}
+
+/* The dark theme. A cool near-black page with panels a step up and rules two steps up. Azure turns from a slab into
+   a dark azure tint with a 1px azure line and light azure text, as a terminal selection reads; checked controls take the
+   same tint, line and a light azure mark. The selection wash is the same dark tint. Text stays cool. */
+[data-system="monte"][data-theme="dark"], .monte[data-theme="dark"], [data-theme="dark"] [data-system="monte"], [data-theme="dark"] .monte {
+  --page: var(--neutral-950);
+  --panel: var(--neutral-925);
+  --well: var(--neutral-900);
+  --hover: oklch(0.965 var(--neutral-c) var(--neutral-h) / 0.04);
+  --pressed: oklch(0.965 var(--neutral-c) var(--neutral-h) / 0.08);
+  --selected: oklch(0.29 calc(var(--brand-c) * 0.4) var(--brand-h));
+  --selected-strong: oklch(0.34 calc(var(--brand-c) * 0.5) var(--brand-h));
+  --scrim: oklch(0 0 0 / 0.64);
+
+  --text-1: var(--neutral-50);
+  --text-2: var(--neutral-300);
+  --text-3: var(--neutral-400);
+  --text-disabled: var(--neutral-700);
+  --text-inverse: var(--neutral-950);
+
+  --line-faint: var(--neutral-900);
+  --line: var(--neutral-850);
+  --line-control: var(--neutral-500);
+  --mark: var(--neutral-500);
+  --dot: var(--neutral-850);
+
+  /* Dark: the brand as a tint with a brand line and light brand text, re-picked by role on the same hue. */
+  --accent: var(--brand-500);
+  --accent-text: var(--brand-300);
+  --accent-edge: var(--brand-400);
+
+  --primary-bg: oklch(0.32 calc(var(--brand-c) * 0.5) var(--brand-h));
+  --primary-text: var(--brand-200);
+  --primary-edge: var(--brand-400);
+  --primary-hover: oklch(0.37 calc(var(--brand-c) * 0.55) var(--brand-h));
+  --primary-edge-hover: var(--brand-300);
+  --primary-pressed: oklch(0.28 calc(var(--brand-c) * 0.45) var(--brand-h));
+  --primary-light: oklch(0.69 calc(var(--brand-c) * 0.7) var(--brand-h) / 0.22);
+  --primary-light-hover: oklch(0.69 calc(var(--brand-c) * 0.7) var(--brand-h) / 0.36);
+  --primary-ring: oklch(0.69 calc(var(--brand-c) * 0.7) var(--brand-h) / 0.12);
+
+  --secondary-bg: var(--neutral-925);
+  --secondary-hover: var(--neutral-900);
+  --secondary-pressed: var(--neutral-850);
+  --secondary-edge-hover: var(--neutral-850);
+  --secondary-light: oklch(0.965 var(--neutral-c) var(--neutral-h) / 0.06);
+  --secondary-light-hover: oklch(0.965 var(--neutral-c) var(--neutral-h) / 0.11);
+  --secondary-ring: oklch(0.965 var(--neutral-c) var(--neutral-h) / 0.045);
+
+  --check-bg: oklch(0.32 calc(var(--brand-c) * 0.5) var(--brand-h));
+  --check-edge: var(--brand-400);
+  --check-mark: var(--brand-200);
+  --check-off-hover: var(--neutral-900);
+
+  /* Field and menu row, dark: the secondary's body, a step lighter under the pointer, the page while typed in. */
+  --field-bg: var(--neutral-925);
+  --field-hover: var(--neutral-900);
+  --field-edge-hover: var(--neutral-800);
+  --field-ring-hover: oklch(0.965 var(--neutral-c) var(--neutral-h) / 0.045);
+  --field-focus-bg: var(--neutral-950);
+  --field-focus-edge: var(--brand-400);
+  --field-ring-focus: oklch(0.6 calc(var(--brand-c) * 0.95) var(--brand-h) / 0.2);
+  --field-ring-fail: oklch(0.7 calc(var(--fail-c) * 0.85) var(--fail-h) / 0.18);
+  --row-highlight: var(--neutral-850);
+  --row-highlight-edge: var(--neutral-800);
+
+  --ok: oklch(0.78 var(--ok-c) var(--ok-h));
+  --ok-text: oklch(0.78 var(--ok-c) var(--ok-h));
+  --ok-tint: oklch(0.26 calc(var(--ok-c) * 0.29) var(--ok-h));
+  --warn: oklch(0.779 var(--warn-c) var(--warn-h));
+  --warn-text: oklch(0.779 var(--warn-c) var(--warn-h));
+  --warn-tint: oklch(0.27 calc(var(--warn-c) * 0.3) var(--warn-h));
+  --fail: oklch(0.7 calc(var(--fail-c) * 0.85) var(--fail-h));
+  --fail-text: oklch(0.7 calc(var(--fail-c) * 0.85) var(--fail-h));
+  --fail-tint: oklch(0.26 calc(var(--fail-c) * 0.28) var(--fail-h));
+
+  --data-1: var(--brand-500);
+  --data-2: var(--brand-300);
+  --data-3: var(--neutral-500);
+  --data-4: var(--brand-700);
+  --data-5: var(--neutral-300);
+  --data-6: var(--brand-100);
+
+  --focus: var(--brand-400);
+  --caret: var(--brand-300);
+
+  --scrollbar-thumb: oklch(0.965 var(--neutral-c) var(--neutral-h) / 0.22);
+}
+
+/* Reduced motion: no wipes, draws, typing or scramble; text and lines are there at once. The pending mark stays as a
+   still mark. */
+@media (prefers-reduced-motion: reduce) {
+  [data-system="monte"], .monte { --dur-press: 0ms; --dur-light: 0ms; --dur-glow: 0ms; --dur-state: 0ms; --dur-overlay: 0ms; --dur-wipe: 0ms; --dur-draw: 0ms; --dur-type: 0ms; --dur-scramble: 0ms; }
+}

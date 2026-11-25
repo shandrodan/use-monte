@@ -1,0 +1,74 @@
+/* Scoped base for Monte. Replaces Tailwind preflight inside .monte only; imported before the utilities. */
+
+[data-system="monte"], .monte {
+  background: var(--page);
+  color: var(--text-1);
+  font: var(--type-body);
+  letter-spacing: var(--tracking-body);
+  text-wrap: pretty;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+}
+/* The same four dark selectors as tokens.css, so native controls and scrollbars turn dark with the tokens. */
+[data-system="monte"][data-theme="dark"], .monte[data-theme="dark"], [data-theme="dark"] [data-system="monte"], [data-theme="dark"] .monte { color-scheme: dark; }
+/* The reset sits in the base layer, beside Tailwind's own preflight, so a project's layered utilities (mx-auto,
+   px-4) beat it, and Monte's unlayered ones still do. What must win over a page's own rules stays out of the layer:
+   the selection colour, the focus ring and the phone zoom guard. */
+@layer base {
+  .monte :where(*, ::before, ::after), [data-system="monte"] :where(*, ::before, ::after) { box-sizing: border-box; border: 0 solid var(--line); border-radius: 0; margin: 0; padding: 0; }
+  .monte :where(h1, h2, h3, h4, h5, h6, p, figure, blockquote, dl, dd, pre) { margin: 0; font: inherit; }
+  .monte :where(ul, ol) { list-style: none; }
+  .monte :where(a) { color: inherit; text-decoration: inherit; }
+  .monte :where(button, input, select, textarea) { font: inherit; letter-spacing: inherit; color: inherit; background: transparent; }
+  .monte :where(button, [role="button"]) { cursor: pointer; }
+  .monte :where(button:disabled, [aria-disabled="true"]) { cursor: not-allowed; }
+  .monte :where(img, video, canvas, svg) { display: block; max-width: 100%; }
+  /* Lucide draws a few glyphs' boxes with rounded corners (Copy, Calendar, Lock); Monte is square everywhere. */
+  .monte :where(svg.lucide rect) { rx: 0; ry: 0; }
+  .monte :where(table) { border-collapse: collapse; }
+  /* Mono in a sentence of sans: mono letters are wider than the sans at one size, so it takes
+     --mono-scale of the text around it and keeps that text's line height and baseline. A block of code sets its own
+     role (type-code). */
+  .monte :where(code, kbd, samp) { font-family: var(--font-mono); font-size: calc(1em * var(--mono-scale)); letter-spacing: 0; }
+  .monte :where(pre) { font-family: var(--font-mono); }
+  /* Code inside a pre is the block's own line, not mono inside a sentence, so it keeps the block's size. */
+  .monte :where(pre code, pre kbd, pre samp) { font-size: inherit; }
+  .monte :where(td, th, time, data, output) { font-variant-numeric: tabular-nums; }
+  /* Every interactive element declares its transition, so no control cuts while its neighbour tweens. */
+  .monte :where(a, button, summary, input, select, textarea, label, [role="button"], [role="tab"], [role="menuitem"], [role="option"], [role="switch"], [role="checkbox"], [role="radio"]) {
+    transition-property: color, background-color, border-color, opacity;
+    transition-duration: var(--dur-state);
+    transition-timing-function: var(--ease-out);
+  }
+  /* The ring's colour is set at rest, so a control that transitions its colours never fades the ring in from black. */
+  .monte :where(*, ::before, ::after), [data-system="monte"] :where(*, ::before, ::after) { outline-color: var(--focus); }
+}
+.monte ::selection { background: var(--selected); color: var(--text-1); }
+/* Focus is a 2px outline in --focus (azure in light, a light azure in dark), 2px out and square, on every focusable. Two
+   classes of specificity beat a site-wide a:focus-visible. A field (the field recipe) draws its own focus on its edge. */
+.monte :where(*):is(:focus-visible, [data-force-focus-visible]) { outline: var(--focus-width) solid var(--focus); outline-offset: var(--focus-offset); }
+/* One thin square scrollbar for every scrolling region, portalled overlays included: a 6px thumb in --scrollbar-thumb
+   with --scrollbar-gap of clear around it (a transparent border, the background clipped inside it), no track, no
+   arrows. The thumb shows only while the pointer is over the region or focus is in it, the way the OS overlay bars
+   do, so a log or a table at rest shows its content and no chrome. Browsers with the ::-webkit-scrollbar parts draw it
+   from them; the standard pair goes only to the others. */
+@supports selector(::-webkit-scrollbar) {
+  @layer base { .monte, .monte *, [data-system="monte"], [data-system="monte"] * { scrollbar-color: auto; } }
+}
+.monte ::-webkit-scrollbar, .monte::-webkit-scrollbar, [data-system="monte"] ::-webkit-scrollbar { width: var(--scrollbar-size); height: var(--scrollbar-size); background: transparent; }
+.monte ::-webkit-scrollbar-thumb, .monte::-webkit-scrollbar-thumb, [data-system="monte"] ::-webkit-scrollbar-thumb { background-color: transparent; background-clip: padding-box; border: var(--scrollbar-gap) solid transparent; border-radius: var(--radius); }
+.monte :is(:hover, :focus-within)::-webkit-scrollbar-thumb, .monte:is(:hover, :focus-within)::-webkit-scrollbar-thumb, [data-system="monte"] :is(:hover, :focus-within)::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); }
+.monte ::-webkit-scrollbar-track, .monte ::-webkit-scrollbar-corner, [data-system="monte"] ::-webkit-scrollbar-track, [data-system="monte"] ::-webkit-scrollbar-corner { background: transparent; }
+.monte ::-webkit-scrollbar-button, [data-system="monte"] ::-webkit-scrollbar-button { display: none; }
+@supports not selector(::-webkit-scrollbar) {
+  .monte, .monte *, [data-system="monte"], [data-system="monte"] * { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+  .monte :is(:hover, :focus-within), [data-system="monte"] :is(:hover, :focus-within) { scrollbar-color: var(--scrollbar-thumb) transparent; }
+}
+
+/* A phone browser zooms the page when a field under 16px takes focus. On a coarse pointer every text field is at least 16px. */
+@media (pointer: coarse) {
+  .monte input:not([type="checkbox"], [type="radio"], [type="range"], [type="button"], [type="submit"], [type="file"]),
+  .monte textarea,
+  .monte select { font-size: max(16px, 1em); }
+}
